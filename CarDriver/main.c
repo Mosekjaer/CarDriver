@@ -14,5 +14,6 @@ int main(void)
 	DriveControl_Init();	
     while (1) 
     {
+		DriveControl_Run();
     }
 }

@@ -12,6 +12,9 @@
 // Target CPU frequency
 #define XTAL 16000000
 
+// USART0, og derfor:
+// TX = PE1 
+// RX = PE0 
 // Initialiserer UART 
 void UART_Init(unsigned long BaudRate, unsigned char DataBit, unsigned char Rx_Int) {
 	if (BaudRate < 300 || BaudRate > 115200)
@@ -40,12 +43,20 @@ void UART_Init(unsigned long BaudRate, unsigned char DataBit, unsigned char Rx_I
 	UBRR0 = (XTAL / (16 * BaudRate)) - 1; // Set baud rate
 }
 
-// Sender data via UART 
+// Sender text via UART 
 void UART_SendCommand(char* command) {
 	while (*command != 0)
 	{
 		while ((UCSR0A & 0b00100000) == 0){}
 		UDR0 = *command;
 		command++;
+	}
+}
+
+// Sender data som bytes via UART
+void UART_SendBytes(uint8_t* bytesArr, uint8_t arrLength){
+	for (uint8_t i = 0; i < arrLength; i++) {
+		while ((UCSR0A & 0b00100000) == 0){}
+		UDR0 = bytesArr[i];	
 	}
 }
