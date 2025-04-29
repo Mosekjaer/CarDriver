@@ -9,7 +9,7 @@
 #ifndef UART_H_
 #define UART_H_
 
-void UART_Init();
-void UART_SendCommand(char[] command);
+void UART_Init(unsigned long BaudRate, unsigned char DataBit, unsigned char Rx_Int);
+void UART_SendCommand(char* command);
 
 #endif /* UART_H_ */

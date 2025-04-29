@@ -6,12 +6,13 @@
  */ 
 
 #include <avr/io.h>
+#include "DriveControl/DriveControl.h"
 
 // Initialiserer systemet 
 int main(void)
 {
+	DriveControl_Init();	
     while (1) 
     {
     }
 }
-
