@@ -15,10 +15,15 @@
 #include "../BackLight/BackLight.h"
 #include "../UART/UART.h"
 #include "../Sound/Sound.h"
+#include "../Motor/Motor.h"
+#include "../Switch/switch.h"
 
 #define DEBOUNCE_TICKS 31250 // 2 sekunder ved prescaler 1024
 
-unsigned int checkpoint_counter = 0;
+// Brug af volatile for at undgå eventuelle compiler optimeringer da vi bruger den i både ISR og main loop.
+volatile unsigned int checkpoint_counter = 0;
+volatile unsigned int max_checkpoint_handled = 0;
+volatile char start_triggered = 0;
 
 void setup_timer3_for_debounce() {
 	TCCR3A = 0;
@@ -79,23 +84,61 @@ ISR(TIMER3_COMPA_vect) {
 
 // Initialiserer logiken for kørslen 
 void DriveControl_Init(){
+	initSwitchPort();
 	BackLight_Init();
 	FrontLight_Init();
-	UART_Init(9600, 8, 0); // Ingen interrupt for nu
+	Motor_Init();
+	UART_Init(9600, 8, 0);
 	Sound_Init();
 	setup_interrupt();
 	sei();
 	
-	
-	//// Test operationer
-	//BackLight_OnMedium(); //Ekstra
-	//_delay_ms(5000); //Ekstra for at se om det virkede
-	//BackLight_OnBreak();
-	//_delay_ms(5000);
-	//BackLight_Off(); //Ekstra
+	BackLight_OnMedium();
+	FrontLight_On();
+	Motor_SetSpeed(50);
 }
+
+void handle_checkpoint(unsigned int cp) {
+	switch(cp) {
+		case 2:
+		Motor_SetSpeed(100);
+		break;
+		case 3:
+		Motor_SetSpeed(50);
+		break;
+		case 6:
+		Motor_SetSpeed(0);
+		BackLight_OnBreak();
+		Motor_Reverse();
+		Motor_SetSpeed(50);
+		BackLight_OnMedium();
+		break;
+		case 8:
+		Motor_SetSpeed(0);
+		Motor_Forward();
+		Motor_SetSpeed(50);
+		break;
+		case 11:
+		Motor_SetSpeed(0);
+		FrontLight_Off();
+		BackLight_Off();
+		break;
+		default:
+		break;
+	}
+}
+
 
 // Starter kørsel af banen 
 void DriveControl_Run(){
+	if (!start_triggered && switchOn(7)) {
+		start_triggered = 1;
+	}
+	if (!start_triggered) return;
+
 	
+	if (checkpoint_counter > max_checkpoint_handled) {
+		handle_checkpoint(checkpoint_counter);
+		max_checkpoint_handled = checkpoint_counter;
+	}
 }
