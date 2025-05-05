@@ -9,19 +9,23 @@
 
 // Initialisere lyset bagpå 
 void BackLight_Init(){
-	DDRB = 0xFF;
-	PORTB = 0;
+	if (DDRB != 0xFF)
+		DDRB = 0xFF;
+	
+	if (PORTB != 0)
+		PORTB = 0;
 	
 	//Sætter TCCR1B og TCCR1A til 10 bit
 	//Har valgt timer 1, og den kører på ben 5.
-	TCCR1B = 0b00000000;
-	TCCR1A = 0b00000011;
+	TCCR1B = 0b00000000; // Skal vi gøre dette?
+	TCCR1A |= (1 << WGM10);
+	TCCR1A |= (1 << WGM11);
 	
 	//Sætter prescaler til no prescaling
-	TCCR1B |= 0b00000001;
+	TCCR1B |= (1 << CS10);
 	
 	//Kigger på slide 29 og kan se at det er nummer 3 man skal gå ud fra
-	TCCR1A |= 0b10000000;
+	TCCR1A |= (1 << COM1A1);
 }
 
 // Tænder lyset på mellemstyrke 

@@ -16,31 +16,35 @@
 // TX = PE1 
 // RX = PE0 
 // Initialiserer UART 
-void UART_Init(unsigned long BaudRate, unsigned char DataBit, unsigned char Rx_Int) {
-	if (BaudRate < 300 || BaudRate > 115200)
+void UART_Init(unsigned long baudRate, unsigned char dataBit, unsigned char enableRxInterrupt) {
+	if (baudRate < 300 || baudRate > 115200)
 		return;
 	
-	if (DataBit < 5 || DataBit > 8)
+	if (dataBit < 5 || dataBit > 8)
 		return;
 	
-	UCSR0B = Rx_Int == 0 ? 0b00011000 : 0b10011000;// Sluk/Tænd Interrupts (3) og T?nd RX og TX (2)
-	switch (DataBit)
-	{
+	UCSR0B = (1 << RXEN0) | (1 << TXEN0); // Aktiver RX og TX
+	if (enableRxInterrupt) {
+		UCSR0B |= (1 << RXCIE0); // Aktiver RX Interrupt
+	}
+	
+	// Sæt data bits (i UCSZ0 og UCSZ1 i UCSR0C)
+	switch (dataBit) {
 		case 5:
-		UCSR0C = 0b00000000; // Asynkron (2), Parity (2), Stop bit (1), Data bits (2)
+		UCSR0C = (0 << UCSZ01) | (0 << UCSZ00);
 		break;
 		case 6:
-		UCSR0C = 0b00000010;
+		UCSR0C = (0 << UCSZ01) | (1 << UCSZ00);
 		break;
 		case 7:
-		UCSR0C = 0b00000100;
+		UCSR0C = (1 << UCSZ01) | (0 << UCSZ00);
 		break;
 		case 8:
-		UCSR0C = 0b00000110;
+		UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
 		break;
 	}
 
-	UBRR0 = (XTAL / (16 * BaudRate)) - 1; // Set baud rate
+	UBRR0 = (XTAL / (16 * baudRate)) - 1; // Set baud rate
 }
 
 // Sender text via UART 
