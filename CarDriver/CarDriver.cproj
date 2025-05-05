@@ -156,6 +156,12 @@
     <Compile Include="Sound\Sound.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Switch\switch.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Switch\switch.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="UART\UART.c">
       <SubType>compile</SubType>
     </Compile>
@@ -168,6 +174,7 @@
     <Folder Include="Motor" />
     <Folder Include="BackLight" />
     <Folder Include="FrontLight" />
+    <Folder Include="Switch" />
     <Folder Include="UART" />
     <Folder Include="Sound" />
   </ItemGroup>
