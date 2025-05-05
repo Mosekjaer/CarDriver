@@ -13,6 +13,5 @@ void Motor_Init();
 void Motor_SetSpeed(int speed);
 void Motor_Forward();
 void Motor_Reverse();
-void Motor_Stop();
 
 #endif /* MOTOR_H_ */

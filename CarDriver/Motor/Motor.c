@@ -25,7 +25,7 @@ void Motor_Init() {
 	TCCR3B |= (1 << CS10);
 		
 	//Kigger på slide 29 og kan se at det er nummer 3 man skal gå ud fra
-	TCCR3B |= (1 << COM1A1);
+	TCCR3A |= (1 << COM1B1);
 }
 
 // Sætter hastigheden på motoren (0-100%)
@@ -42,9 +42,4 @@ void Motor_Forward() {
 // Sætter motoren til at kører baglæns 
 void Motor_Reverse(){
 	PORTB = PINB | (1 << PB4);
-}
-
-// Stopper motoren
-void Motor_Stop() {
-	OCR1A = 0; // duty cycle set to 0 to stop motor
 }
