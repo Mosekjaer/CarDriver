@@ -17,9 +17,9 @@ void Motor_Init() {
 		
 	//Sætter TCCR1B og TCCR1A til 10 bit
 	//Har valgt timer 3, og den kører på ben OC3B (PE4).
-	TCCR3B = 0b00000000; // Skal vi gøre dette?
-	TCCR3B |= (1 << WGM10);
-	TCCR3B |= (1 << WGM11);
+	TCCR3B = 0b00000000; 
+	TCCR3A |= (1 << WGM10);
+	TCCR3A |= (1 << WGM11);
 		
 	//Sætter prescaler til no prescaling
 	TCCR3B |= (1 << CS10);
@@ -36,7 +36,7 @@ void Motor_SetSpeed(int speed) {
 
 // Sætter motoren til at kører fremad 
 void Motor_Forward() {
-	PORTB = PINB | (0 << PB4);
+	PORTB = PINB & ~(1 << PB4);
 }
 
 // Sætter motoren til at kører baglæns 

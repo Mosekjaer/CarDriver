@@ -24,5 +24,5 @@ void FrontLight_On() {
 
 // Slukker lyset foran 
 void FrontLight_Off() {
-	PORTB = PINB & (0b11111110 << PB6);
+	PORTB = PINB & ~(1 << PB6);
 }
