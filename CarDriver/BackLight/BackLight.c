@@ -6,6 +6,20 @@
  */ 
 #include <avr/io.h>
 #include "BackLight.h"
+#define F_CPU 16000000UL
+#include <avr/delay.h>
+
+void BackLight_Test() {
+	BackLight_Init();
+	for (int i = 0; i < 5; i++){
+		BackLight_Off();
+		_delay_ms(5000);
+		BackLight_OnMedium();
+		_delay_ms(5000);
+		BackLight_OnBreak();
+		_delay_ms(5000);
+	}
+}
 
 // Initialisere lyset bagpå 
 void BackLight_Init(){
@@ -15,29 +29,27 @@ void BackLight_Init(){
 	if (PORTB != 0)
 		PORTB = 0;
 	
-	//Sætter TCCR1B og TCCR1A til 10 bit
-	//Har valgt timer 1, og den kører på ben 5.
-	TCCR1B = 0b00000000; // Skal vi gøre dette?
-	TCCR1A |= (1 << WGM10);
-	TCCR1A |= (1 << WGM11);
+    // Nulstiller TCCR1A og TCCR1B først
+    TCCR1A = 0;
+    TCCR1B = 0;
 	
-	//Sætter prescaler til no prescaling
-	TCCR1B |= (1 << CS10);
+    // Phase Correct PWM, mode 10 (Tælleren går op til TOP og ned igen, glatte PWM-overgange) Kigger på slide 29 og kan se at det er nummer 3 man skal gå ud fra
+    TCCR1A = (1 << COM1A1) | (1 << WGM11);
+    TCCR1B = (1 << WGM13) | (1 << CS11); // Prescaler = 8
 	
-	//Kigger på slide 29 og kan se at det er nummer 3 man skal gå ud fra
-	TCCR1A |= (1 << COM1A1);
+	ICR1 = 999; // Sætter TOP til 999
 }
 
 // Tænder lyset på mellemstyrke 
 void BackLight_OnMedium() {
 	//Bruger formlen for duty cycle på slide 4 i PWM
-	OCR1A = 511; // 50% duty cycle
+	OCR1A = 500; // 25% duty cycle
 }
 
 // Tænder lyset på høj styrke 
 void BackLight_OnBreak(){
 	//Bruger formlen for duty cycle på slide 4 i PWM
-	OCR1A = 1023; // 100% duty cycle
+	OCR1A = 999; // 100% duty cycle
 }
 
 // Slukker lyset bagpå 

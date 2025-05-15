@@ -18,6 +18,7 @@
 #include "../Motor/Motor.h"
 #include "../Switch/switch.h"
 
+#define TEST
 #define DEBOUNCE_TICKS 31250 // 2 sekunder ved prescaler 1024
 
 // Brug af volatile for at undgå eventuelle compiler optimeringer da vi bruger den i både ISR og main loop.
@@ -84,6 +85,7 @@ ISR(TIMER3_COMPA_vect) {
 
 // Initialiserer logiken for kørslen 
 void DriveControl_Init(){
+#ifndef TEST
 	initSwitchPort();
 	BackLight_Init();
 	FrontLight_Init();
@@ -96,6 +98,9 @@ void DriveControl_Init(){
 	BackLight_OnMedium();
 	FrontLight_On();
 	Motor_SetSpeed(50);
+#else
+	BackLight_Test();
+#endif
 }
 
 void handle_checkpoint(unsigned int cp) {

@@ -5,6 +5,7 @@
  * Author: Frederik & Stine
  */ 
 
+#include <avr/io.h>
 #include "Motor.h"
 
 // Initialiserer styring af motoren 

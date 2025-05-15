@@ -9,6 +9,7 @@
 #ifndef BACKLIGHT_H_
 #define BACKLIGHT_H_
 
+void BackLight_Test();
 void BackLight_Init();
 void BackLight_OnMedium();
 void BackLight_OnBreak();
