@@ -9,6 +9,7 @@
 #ifndef FRONTLIGHT_H_
 #define FRONTLIGHT_H_
 
+void FrontLight_Test();
 void FrontLight_Init();
 void FrontLight_On();
 void FrontLight_Off();

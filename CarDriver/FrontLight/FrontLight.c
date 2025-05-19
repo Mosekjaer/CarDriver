@@ -8,6 +8,16 @@
 #include <avr/io.h>
 #include "FrontLight.h"
 
+void FrontLight_Test() {
+	FrontLight_Init();
+	for (int i = 0; i < 10; i++){
+		FrontLight_Off();
+		_delay_ms(5000);
+		FrontLight_On();
+		_delay_ms(5000);
+	}
+}
+
 // Initialiserer lyset foran 
 void FrontLight_Init() {
 	if (DDRB != 0xFF)
