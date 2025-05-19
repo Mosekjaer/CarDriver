@@ -16,9 +16,12 @@ void Motor_Init() {
 	if (PORTE != 0)
 		PORTE = 0;
 		
-	//Sætter TCCR1B og TCCR1A til 10 bit
+    // Nulstiller TCCR1A og TCCR1B først
+    TCCR3A = 0;
+    TCCR3B = 0;
+	
+	//Sætter TCCR3B og TCCR3A til 10 bit
 	//Har valgt timer 3, og den kører på ben OC3B (PE4).
-	TCCR3B = 0b00000000; 
 	TCCR3A |= (1 << WGM10);
 	TCCR3A |= (1 << WGM11);
 		
