@@ -18,7 +18,7 @@
 #include "../Motor/Motor.h"
 #include "../Switch/switch.h"
 
-#define TEST
+#define RUN_TESTS 0
 #define DEBOUNCE_TICKS 31250 // 2 sekunder ved prescaler 1024
 
 // Brug af volatile for at undgå eventuelle compiler optimeringer da vi bruger den i både ISR og main loop.
@@ -43,6 +43,11 @@ void setup_timer3_for_debounce() {
 void setup_interrupt() {
 	EICRA |= (1 << ISC01); // ISC01 = 1, ISC00 = 0 ? Falling edge og IKKE rising edge da det trigger ved at gå low.
 	EICRA &= ~(1 << ISC00);
+	
+	// Ryd interrupt flager for INT0 og INT1
+	EIFR |= (1 << INTF0);
+	EIFR |= (1 << INTF1);
+	
 	EIMSK |= (1 << INT0); // Aktiver INT0 benet på arduino
 	EIMSK |= (1 << INT1); // Aktiver INT1 benet på arduino
 }
@@ -52,14 +57,7 @@ void handle_interrupt() {
 	EIMSK &= ~(1 << INT0);
 	EIMSK &= ~(1 << INT1);
 
-	// Frontlight on er for testing
-	FrontLight_On();
 	checkpoint_counter++;
-	    
-	// Skriver counter ud til Tera Term (Terminal program) for debugging.
-	char arr[7];
-	itoa(checkpoint_counter, arr, 10);
-	UART_SendCommand(arr);
 
 	setup_timer3_for_debounce();
 }
@@ -76,16 +74,18 @@ ISR(TIMER3_COMPA_vect) {
 	TCCR3B = 0;                     // Stop Timer3
 	TIMSK3 &= ~(1 << OCIE3A);       // Slå compare match fra
 	
-	// Bruger frontlight off til test sluk af led.
-	FrontLight_Off();
-
+	// Ryd interrupt flaget for INT0 og INT1 før genaktivering for at fjerne ventende interupts der måtte være for at forhindre ekstra trigger
+	EIFR |= (1 << INTF0);
+	EIFR |= (1 << INTF1);
+		
 	EIMSK |= (1 << INT0);           // Genaktiver INT0
-	EIMSK |= (1 << INT1);
+	EIMSK |= (1 << INT1);			// Genaktiver INT1
 }
 
 // Initialiserer logiken for kørslen 
 void DriveControl_Init(){
-#ifndef TEST
+#if !RUN_TESTS
+	// Initialisering af drivers
 	initSwitchPort();
 	BackLight_Init();
 	FrontLight_Init();
@@ -95,11 +95,13 @@ void DriveControl_Init(){
 	setup_interrupt();
 	sei();
 	
+	// Sætter start værdier
 	BackLight_OnMedium();
 	FrontLight_On();
 	Motor_SetSpeed(50);
 #else
 	BackLight_Test();
+	FrontLight_Test();
 #endif
 }
 
@@ -140,7 +142,6 @@ void DriveControl_Run(){
 		start_triggered = 1;
 	}
 	if (!start_triggered) return;
-
 	
 	if (checkpoint_counter > max_checkpoint_handled) {
 		handle_checkpoint(checkpoint_counter);
