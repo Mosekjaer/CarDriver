@@ -1,69 +1,75 @@
 /*
- * UART.c
+ * uart.c
  *
- * Created: 06-05-2025 13:52:04
- *  Author: Julius
+ * Created: 4/22/2025 10:06:18 AM
+ *  Author: frede
  */ 
-
-
 #include <avr/io.h>
 #include <stdlib.h>
-#include "uart.h"
+#include "uart_int.h"
 
 // Target CPU frequency
 #define XTAL 16000000
 
 /*************************************************************************
 UART 0 initialization:
-    Asynchronous mode.
+    Asynchronous mode. 
     Baud rate = 9600.
     Data bits = 8.
     RX and TX enabled.
-    No interrupts enabled.
-    Number of Stop Bits = 1.
+    No interrupts enabled. 
+    Number of Stop Bits = 1. 
     No Parity.
-    Baud rate = 9600.
-    Data bits = 8.
 *************************************************************************/
-void UART_Init()
-{
-	unsigned char ubrr = 103; //(F_CPU / (16 * BAUD)) - 1 |(16000000/(16*9600))-1 = 103.166 ? 103
+void InitUART(unsigned long BaudRate, unsigned char DataBit, unsigned char Rx_Int)
+{  
+	if (BaudRate < 300 || BaudRate > 115200)
+		return;
+		
+	if (DataBit < 5 || DataBit > 8)
+		return;
 	
-	UBRR1 = ubrr;
-	
-	UCSR1B = 0b00011000; // disable interrupts og enable tx og rx
-	
-	UCSR1C = 0b00000110; // sætter frameformat til 8 data bits, 1 stop bit og ingen paritet
-	
-	
-	
+	UCSR0B = Rx_Int == 0 ? 0b00011000 : 0b10011000;// Sluk/TÃ¦nd Interrupts (3) og Tï¿½nd RX og TX (2)
+	switch (DataBit)
+	{
+		case 5: 
+			UCSR0C = 0b00000000; // Asynkron (2), Parity (2), Stop bit (1), Data bits (2)  
+		break;
+		case 6:
+			UCSR0C = 0b00000010;
+		break;
+		case 7:
+			UCSR0C = 0b00000100;
+		break;
+		case 8: 
+			UCSR0C = 0b00000110;
+		break;
+	}
+
+	UBRR0 = (XTAL / (16 * BaudRate)) - 1; // Set baud rate
 }
 
 /*************************************************************************
   Returns 0 (FALSE), if the UART has NOT received a new character.
   Returns value <> 0 (TRUE), if the UART HAS received a new character.
 *************************************************************************/
-unsigned char CharReady()
+unsigned char CharReadyy()
 {
-	if(UCSR1A & (0b10000000))
-	{
+	if ((UCSR0A & 0b10000000) != 0)
 		return 1;
-	} else {
-		return 0;
-	}
-	
-   // <---- Skriv din kode her
+		
+	return 0;
 }
 
 /*************************************************************************
 Awaits new character received.
 Then this character is returned.
 *************************************************************************/
-char ReadChar()
+char ReadCharr()
 {
-	while(!(UCSR1A &(0b10000000)));
+	while ((UCSR0A & 0b10000000) == 0){}
+	   
 	return UDR0;
-   // <---- Skriv din kode her
 }
 
 /*************************************************************************
@@ -72,31 +78,25 @@ Then send the character.
 Parameter :
 	Tegn : Character for sending. 
 *************************************************************************/
-void SendCommand(unsigned char *command)
+void SendCharr(char Tegn)
 {
-
-	for (int i = 0; i < 8; i++)
-	{
-	while (!(UCSR1A & (1 << UDRE1)));
-	UDR1 = command[i];
-	}
+	while ((UCSR0A & 0b00100000) == 0){}
+	   
+	UDR0 = Tegn;
 }
-	
 
 /*************************************************************************
 Sends 0 terminated string.
 Parameter:
    Streng: Pointer to the string. 
 *************************************************************************/
-void SendString( char* Streng)
+void SendStringg(char* Streng)
 {
-	while(*Streng != '\0')
-	{
-		SendCommand(*Streng);
-		
-		Streng++;
-	}
-   // <---- Skriv din kode her
+   while (*Streng != 0)
+   {
+	   SendCharr(*Streng);
+	   Streng++;
+   }
 }
 
 /*************************************************************************
@@ -106,16 +106,11 @@ Makes use of the C standard library <stdlib.h>.
 Parameter:
     Tal: The integer to be converted and sent. 
 *************************************************************************/
-void SendInteger(int Tal)
+void SendIntegerr(int Tal)
 {
-	char buffer[7];
-	
-	
-	itoa(Tal, buffer, 10);
-	
-	SendString(buffer);
-	
-	
-   
+   char arr[7];
+   itoa(Tal, arr, 10);
+   SendString(arr);
 }
 
+/************************************************************************/

@@ -13,11 +13,11 @@ void BackLight_Test() {
 	BackLight_Init();
 	for (int i = 0; i < 5; i++){
 		BackLight_Off();
-		_delay_ms(5000);
+		_delay_ms(2500);
 		BackLight_OnMedium();
-		_delay_ms(5000);
+		_delay_ms(2500);
 		BackLight_OnBreak();
-		_delay_ms(5000);
+		_delay_ms(2500);
 	}
 }
 

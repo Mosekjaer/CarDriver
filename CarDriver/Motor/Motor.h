@@ -9,6 +9,7 @@
 #ifndef MOTOR_H_
 #define MOTOR_H_
 
+void Motor_Test();
 void Motor_Init();
 void Motor_SetSpeed(int speed);
 void Motor_Forward();

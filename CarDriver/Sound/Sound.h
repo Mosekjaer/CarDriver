@@ -1,17 +1,12 @@
 /*
- * Sound.h
+ * CFile1.c
  *
- * Created: 4/23/2025 9:56:23 AM
- * Author: Frederik & Stine
+ * Created: 06-05-2025 13:48:44
+ *  Author: juliu
  */ 
 
 
-#ifndef SOUND_H_
-#define SOUND_H_
-
 void Sound_Init();
-void Sound_PlayStartup();
-void Sound_PlayCheckpoint();
-void Sound_PlayFinish();
-
-#endif /* SOUND_H_ */
+void sound_PlayStartup(unsigned char track);
+void Sound_PlayCheckpoint(unsigned char track);
+void Sound_PlayFinish(unsigned char track);

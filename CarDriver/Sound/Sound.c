@@ -1,58 +1,76 @@
 /*
- * Sound.c
+ * sound.c
  *
- * Created: 4/23/2025 9:55:42 AM
- * Author: Frederik & Stine
+ * Created: 06-05-2025 13:51:50
+ *  Author: juliu
  */ 
 
-#include <stdint.h> 
+#define F_CPU 16000000UL
+#include <avr/io.h>
+#include <avr/delay.h>
 #include "Sound.h"
 #include "../UART/UART.h"
 
-// Få high og low bytes af checksum
-void Sound_Checksum(uint8_t cmd, uint8_t feedback, uint8_t para1, uint8_t para2, uint8_t* high, uint8_t* low) {
-	uint16_t sum = (uint16_t)cmd + (uint16_t)feedback + (uint16_t)para1 + (uint16_t)para2;
-	uint16_t checksum = 0xFFFF - sum + 1;
 
-	*high = (uint8_t)((checksum >> 8) & 0xFF);
-	*low  = (uint8_t)(checksum & 0xFF);
+void Sound_Init()
+{
+	//unsigned char Reset[8]={0x7E, 0x0c, 0x00, 0x00, 0x00, 0xFF,0xF4, 0xEF};
+	//SendCommand(Reset);
+	
+	_delay_ms(1000);
+	
+	// set volume to max
+	//unsigned char volumeUp[8]={0x7E, 0x06, 0x00, 0x00, 0x1E, 0xFF, 0xDC, 0xEF };
+	unsigned char volumeUp[8]={0x7E, 0x06, 0x00, 0x00, 0x0F, 0xFF, 0xDC, 0xEF };
+	SendCommand(volumeUp);
+	
+	_delay_ms(1000);
+	
+	// sets media source to SD card
+	unsigned char media[8]= {0x7E, 0x09, 0x00, 0x00, 0x02, 0xFF, 0xF5, 0xEF};
+	SendCommand(media);
+	
+	_delay_ms(1000);
+
 }
 
-// [0x7E] [CMD] [Feedback] [Para1] [Para2] [ChecksumHigh] [ChecksumLow] [0xEF]
-void Sound_SendCommand(uint8_t cmd, uint8_t feedback, uint8_t para1, uint8_t para2) {
-	uint8_t checksumHigh, checksumLow;
-	Sound_Checksum(cmd, feedback, para1, para2, &checksumHigh, &checksumLow);
 
-	uint8_t frame[8];
-	frame[0] = 0x7E;
-	frame[1] = cmd;
-	frame[2] = feedback;
-	frame[3] = para1;
-	frame[4] = para2;
-	frame[5] = checksumHigh;
-	frame[6] = checksumLow;
-	frame[7] = 0xEF;
 
-	UART_SendBytes(frame, sizeof(frame));
+
+void sound_PlayStartup(unsigned char track)
+{
+	
+	unsigned char trackA[8]={0x7E, 0x03, 0x00, 0x00, 0x01, 0xFF, 0xFC, 0xEF};
+	if(track==1)
+	{
+		SendCommand(trackA);
+		return;
+	}
+	
+	
 }
 
-// Initialiserer selve lyd hardwaren 
-void Sound_Init() {
-	// Lydstyrke til max (30)
-	Sound_SendCommand(0x06, 0x00, 0x00, 0x1E);
+
+void Sound_PlayCheckpoint(unsigned char track)
+{
+	unsigned char TrackB[8] = {0x7E, 0x03, 0x00, 0x00, 0x02, 0xFF, 0xFB, 0xEF};
+	if (track==2)
+	{
+		SendCommand(TrackB);
+		return;
+	}
+	
 }
 
-// Afspiller “Free Bird” ved start 
-void Sound_PlayStartup() {
-	Sound_SendCommand(0x03, 0x00, 0x00, 0x01);
+
+void Sound_PlayFinish(unsigned char track)
+{
+	unsigned char TrackC[8]={0x7E, 0x03, 0x00, 0x00, 0x03, 0xFF, 0xFA, 0xEF};
+	if(track == 3)
+	{
+		SendCommand(TrackC);
+		return;
+	}
 }
 
-// Afspiller “Yes” ved refleksbrik 
-void Sound_PlayCheckpoint() {
-	Sound_SendCommand(0x03, 0x00, 0x00, 0x02);
-}
 
-// Afspiller konfetti-lyd ved mål 
-void Sound_PlayFinish() {
-	Sound_SendCommand(0x03, 0x00, 0x00, 0x03);
-}
