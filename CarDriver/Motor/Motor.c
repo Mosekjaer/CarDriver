@@ -6,7 +6,7 @@
  */ 
 
 #define F_CPU 16000000UL
-#include <avr/delay.h>
+#include <util/delay.h>
 #include <avr/io.h>
 #include "Motor.h"
 
@@ -49,8 +49,8 @@ void Motor_Init() {
 
 // Sætter hastigheden på motoren (0-100%)
 void Motor_SetSpeed(int speed) {
-	int motor_speed = (1023 * speed) / 100;
-	OCR4B = motor_speed; // duty cycle based on the motor speed provided.
+	//int motor_speed = (1023 * speed) / 100;
+	OCR4B = speed; // duty cycle based on the motor speed provided.
 }
 
 // Sætter motoren til at kører fremad 

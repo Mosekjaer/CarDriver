@@ -7,7 +7,7 @@
 
 #define F_CPU 16000000UL
 #include <avr/io.h>
-#include <avr/delay.h>
+#include <util/delay.h>
 #include "Sound.h"
 #include "../UART/UART.h"
 

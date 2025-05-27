@@ -7,7 +7,7 @@
 #include <avr/io.h>
 #include "BackLight.h"
 #define F_CPU 16000000UL
-#include <avr/delay.h>
+#include <util/delay.h>
 
 void BackLight_Test() {
 	BackLight_Init();

@@ -7,7 +7,7 @@
 
 #include <avr/io.h>
 #define F_CPU 16000000UL
-#include <avr/delay.h>
+#include <util/delay.h>
 #include "FrontLight.h"
 
 void FrontLight_Test() {

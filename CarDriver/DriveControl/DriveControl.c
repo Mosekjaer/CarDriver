@@ -6,7 +6,7 @@
  */ 
 
 #define F_CPU 16000000UL
-#include <avr/delay.h>
+#include <util/delay.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdlib.h>
@@ -25,6 +25,67 @@
 volatile unsigned int checkpoint_counter = 0;
 volatile int max_checkpoint_handled = -1;
 volatile char start_triggered = 0;
+
+// Laver ikke blokerende delay metode til baglyset når der bremses.
+volatile uint8_t backlight_state = 0;
+#define BACKLIGHT_NONE 0
+#define BACKLIGHT_BREAK 1
+
+#define BREAK_DURATION_MS 2000  // hvor længe vi vil have break til at være aktiv 
+volatile uint32_t break_start_time = 0;
+
+// Laver ikke blokerende delay metode til sound checkpoint når der registreres en brik.
+volatile uint8_t sound_state = 0;
+#define SOUND_NONE 0
+#define SOUND_WAITING 1
+
+#define SOUND_DELAY_MS 1000
+volatile uint32_t sound_start_time = 0;
+
+
+// Bruger timer0 til at styrer break & sound tiden
+volatile uint32_t milliseconds = 0;
+
+ISR(TIMER0_COMPA_vect) {
+	milliseconds++;
+}
+
+void init_timer0() {
+	TCCR0A = (1 << WGM01); // CTC mode
+	TCCR0B = (1 << CS01) | (1 << CS00); // Prescaler 64
+	OCR0A = 249; // 1 ms ved 16 MHz
+	TIMSK0 |= (1 << OCIE0A); // Aktiver compare match interrupt
+}
+
+void Motor_SmoothDirectionChange(uint16_t target_speed, uint8_t direction, uint16_t current_speed) {
+	uint8_t step = 50;
+	uint8_t min_speed = 250;
+
+	// vi laver en glidende nedbremsning
+	while (current_speed > min_speed) {
+		Motor_SetSpeed(current_speed);
+		_delay_ms(100);
+		current_speed -= step;
+		if (current_speed < min_speed) current_speed = min_speed;
+	}
+
+	// vi skifter retning
+	if (direction == 0)
+		Motor_Forward();
+	else
+		Motor_Reverse();
+
+	// vi laver en glidende opstart
+	current_speed = min_speed;
+	while (current_speed < target_speed) {
+		Motor_SetSpeed(current_speed);
+		_delay_ms(100);
+		current_speed += step;
+		if (current_speed > target_speed) current_speed = target_speed;
+	}
+
+	Motor_SetSpeed(target_speed);
+}
 
 void setup_timer3_for_debounce() {
 	TCCR3A = 0;
@@ -103,66 +164,66 @@ void DriveControl_Init(){
 	 Motor_Init();
 	 UART_Init(9600, 8, 0);
 	 Sound_Init();
+	 
+	 // Styring af tid og interrupts
+	 init_timer0();
 	 setup_interrupt();
 	 sei();
-	 //Sætter start værdier
-	 BackLight_OnMedium();
-	 FrontLight_On();
-	
-	
-	//FrontLight_Test();
-	//BackLight_Test();
 }
 
 void handle_checkpoint(unsigned int cp) {
-	Sound_PlayCheckpoint(2);
-	SendStringg("Checkpoint triggered!");
-	SendCharr(cp);
-	SendStringg("\r\n");
+	if (cp != 0)
+		Sound_PlayCheckpoint(2);
+		
 	switch(cp) {
 		case 0:
-		Motor_SetSpeed(30);
+		BackLight_OnMedium();
+		FrontLight_On();
+		Motor_SetSpeed(306);
 		break;
 		case 2:
-		Motor_SetSpeed(40);
+		Motor_SetSpeed(1000);
 		break;
 		case 3:
-		Motor_SetSpeed(15);
+		Motor_SetSpeed(153);
 		break;
 		case 4:
-		Motor_SetSpeed(30);
+		Motor_SetSpeed(400); //32
 		break;
 		case 6:
-		_delay_ms(500);
 		BackLight_OnBreak();
-		Motor_SetSpeed(0);
-		Motor_Reverse();
-		Motor_SetSpeed(30);
-		_delay_ms(500);
-		BackLight_OnMedium();
+		//Motor_SetSpeed(0);
+		//_delay_ms(500);
+		//Motor_Reverse();
+		//Motor_SetSpeed(700);
+		Motor_SmoothDirectionChange(600, 1, 400);  // 1 for bagleems
+		break_start_time = milliseconds;
+		backlight_state = BACKLIGHT_BREAK;
 		break;
 		case 8:
-		_delay_ms(500);
-		Motor_SetSpeed(0);
-		Motor_Forward();
-		Motor_SetSpeed(32);
+		// Vent med at køre forlængs så den kan registrere brikken igen.
+		//_delay_ms(500);
+		//Motor_SetSpeed(0);
+		//Motor_Forward();
+		//Motor_SetSpeed(700);
+		Motor_SmoothDirectionChange(700, 0, 600);  // 0 for forlængs
 		break;
 		case 11:
-		_delay_ms(3000);
+		// Vent lidt med at bremse til vi er i mål.
+		_delay_ms(300);
 		BackLight_OnBreak();
 		Motor_SetSpeed(0);
-		FrontLight_Off();
-		Sound_PlayFinish(3);
-		_delay_ms(1000);
-		BackLight_Off();
+		break_start_time = milliseconds;
+		backlight_state = BACKLIGHT_BREAK;
 		break;
 		default:
 		break;
 	}
-	_delay_ms(1000);
 	
-	if (cp < 11)
-		sound_PlayStartup(1);
+	if (cp < 11) {
+		sound_state = SOUND_WAITING;
+		sound_start_time = milliseconds;
+	}
 }
 
 
@@ -171,11 +232,34 @@ void DriveControl_Run(){
 	if (!start_triggered && switchOn(7)) {
 		start_triggered = 1;
 		sound_PlayStartup(1);
+		_delay_ms(5000); // Vi skal holde og spille lidt inden vi kører
 	}
 	if (!start_triggered) return;
 	
 	if (checkpoint_counter > max_checkpoint_handled || max_checkpoint_handled == -1) {
 		handle_checkpoint(checkpoint_counter);
 		max_checkpoint_handled = checkpoint_counter;
+	}
+	
+	// Sæt backlight tilbage til medium når backlight timer er ovre.
+	if (backlight_state == BACKLIGHT_BREAK && (milliseconds - break_start_time >= BREAK_DURATION_MS)) {
+		if (checkpoint_counter != 11) {	
+			BackLight_OnMedium();
+
+		}
+		else
+		{
+			BackLight_Off();
+			FrontLight_Off();
+			Sound_PlayFinish(3);
+		}
+			
+		backlight_state = BACKLIGHT_NONE;
+	}
+		
+	// Fjern checkpoint sound når tiden er gået. 
+	if (sound_state == SOUND_WAITING && (milliseconds - sound_start_time >= SOUND_DELAY_MS)) {
+		sound_PlayStartup(1);
+		sound_state = SOUND_NONE;
 	}
 }

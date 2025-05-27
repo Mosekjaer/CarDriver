@@ -135,12 +135,6 @@
     <Compile Include="DriveControl\DriveControl.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="DriveControl\uart_int.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="DriveControl\uart_int.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="FrontLight\FrontLight.c">
       <SubType>compile</SubType>
     </Compile>
