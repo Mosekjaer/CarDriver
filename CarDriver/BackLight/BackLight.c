@@ -21,7 +21,7 @@ void BackLight_Test() {
 	}
 }
 
-// Initialisere lyset bagpå 
+// Initialisere lyset bagpï¿½ 
 void BackLight_Init(){
 	if (DDRB != 0xFF)
 		DDRB = 0xFF;
@@ -29,30 +29,28 @@ void BackLight_Init(){
 	if (PORTB != 0)
 		PORTB = 0;
 	
-    // Nulstiller TCCR1A og TCCR1B først
+    // Nulstiller TCCR1A og TCCR1B fï¿½rst
     TCCR1A = 0;
     TCCR1B = 0;
 	
-    // Phase Correct PWM, mode 10 (Tælleren går op til TOP og ned igen, glatte PWM-overgange) Kigger på slide 29 og kan se at det er nummer 3 man skal gå ud fra
+    // Phase Correct PWM, mode 10 (Tï¿½lleren gï¿½r op til TOP og ned igen, glatte PWM-overgange) Kigger pï¿½ slide 29 og kan se at det er nummer 3 man skal gï¿½ ud fra
     TCCR1A = (1 << COM1A1) | (1 << WGM11);
     TCCR1B = (1 << WGM13) | (1 << CS11); // Prescaler = 8
 	
-	ICR1 = 999; // Sætter TOP til 999
+	ICR1 = 999; // Sï¿½tter TOP til 999
 }
 
-// Tænder lyset på mellemstyrke 
+// Tï¿½nder lyset pï¿½ mellemstyrke 
 void BackLight_OnMedium() {
-	//Bruger formlen for duty cycle på slide 4 i PWM
-	OCR1A = 500; // 25% duty cycle
+	OCR1A = 250; // 25% duty cycle (ca. 10 mA)
 }
 
-// Tænder lyset på høj styrke 
+// Tï¿½nder lyset pï¿½ hï¿½j styrke 
 void BackLight_OnBreak(){
-	//Bruger formlen for duty cycle på slide 4 i PWM
-	OCR1A = 999; // 100% duty cycle
+	OCR1A = 999; // 100% duty cycle (ca. 50 mA)
 }
 
-// Slukker lyset bagpå 
+// Slukker lyset bagpï¿½ 
 void BackLight_Off() {
 	OCR1A = 0;
 }

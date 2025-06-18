@@ -47,9 +47,8 @@ void Motor_Init() {
 	TCCR4A |= (1 << COM4B1);
 }
 
-// Sætter hastigheden på motoren (0-100%)
+// Sætter hastigheden på motoren (0-1023)
 void Motor_SetSpeed(int speed) {
-	//int motor_speed = (1023 * speed) / 100;
 	OCR4B = speed; // duty cycle based on the motor speed provided.
 }
 

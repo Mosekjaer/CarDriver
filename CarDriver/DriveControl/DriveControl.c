@@ -70,10 +70,8 @@ void Motor_SmoothDirectionChange(uint16_t target_speed, uint8_t direction, uint1
 	}
 
 	// vi skifter retning
-	if (direction == 0)
-		Motor_Forward();
-	else
-		Motor_Reverse();
+	if (direction == 0) Motor_Forward();
+	else Motor_Reverse();
 
 	// vi laver en glidende opstart
 	current_speed = min_speed;
@@ -172,8 +170,9 @@ void DriveControl_Init(){
 }
 
 void handle_checkpoint(unsigned int cp) {
-	if (cp != 0)
+	if (cp != 0) {
 		Sound_PlayCheckpoint(2);
+	}
 		
 	switch(cp) {
 		case 0:
@@ -192,20 +191,12 @@ void handle_checkpoint(unsigned int cp) {
 		break;
 		case 6:
 		BackLight_OnBreak();
-		//Motor_SetSpeed(0);
-		//_delay_ms(500);
-		//Motor_Reverse();
-		//Motor_SetSpeed(700);
 		Motor_SmoothDirectionChange(600, 1, 400);  // 1 for bagleems
 		break_start_time = milliseconds;
 		backlight_state = BACKLIGHT_BREAK;
 		break;
 		case 8:
 		// Vent med at køre forlængs så den kan registrere brikken igen.
-		//_delay_ms(500);
-		//Motor_SetSpeed(0);
-		//Motor_Forward();
-		//Motor_SetSpeed(700);
 		Motor_SmoothDirectionChange(700, 0, 600);  // 0 for forlængs
 		break;
 		case 11:
@@ -242,10 +233,11 @@ void DriveControl_Run(){
 	}
 	
 	// Sæt backlight tilbage til medium når backlight timer er ovre.
-	if (backlight_state == BACKLIGHT_BREAK && (milliseconds - break_start_time >= BREAK_DURATION_MS)) {
-		if (checkpoint_counter != 11) {	
+	if (backlight_state == BACKLIGHT_BREAK && (milliseconds - break_start_time >= BREAK_DURATION_MS))
+	{
+		if (checkpoint_counter != 11) 
+		{	
 			BackLight_OnMedium();
-
 		}
 		else
 		{
@@ -258,7 +250,7 @@ void DriveControl_Run(){
 	}
 		
 	// Fjern checkpoint sound når tiden er gået. 
-	if (sound_state == SOUND_WAITING && (milliseconds - sound_start_time >= SOUND_DELAY_MS)) {
+	if (sound_state == SOUND_WAITING && (milliseconds - sound_start_time >= SOUND_DELAY_MS) && checkpoint_counter != 0) {
 		sound_PlayStartup(1);
 		sound_state = SOUND_NONE;
 	}
